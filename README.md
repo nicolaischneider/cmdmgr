@@ -3,11 +3,12 @@
 The repo for the official killer command manager to make the management of the many cool ass commands we have easier then ever.
 
 ## Todos
-- [ ] basic script to create new commands
-- [ ] help function to view comamnds
-- [ ] management of global and local file
-- [ ] test env to play around with implementations
-- [ ] delete commands
-- [ ] show global commands in readme file
+- [x] basic script to create new commands
+- [x] help function to view comamnds
+- [x] management of global and local file
+- [x] test env to play around with implementations
+- [x] delete commands
+- [ ] each command description should be added as a comment above a function
+- [ ] add update command in case commands have been imported from github (all names and descriptions should be added respectfully)
 - [ ] import commands from zshrc file
-- [ ] add option to download script and add linking to `.zshrc` file
+- [x] add option to download script and add linking to `.zshrc` file
