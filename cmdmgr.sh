@@ -46,7 +46,7 @@ create_command() {
         echo "$name - $description" >> "$HELP_FILE"
         sort -o "$HELP_FILE" "$HELP_FILE"
         source "$target_file"
-        echo "Command '$name' added and sourced."
+        echo "Command '$name' added. Remember to source .zshrc."
     else
         echo "Command creation cancelled."
     fi
@@ -191,29 +191,33 @@ uninstall() {
 }
 
 delete_command() {
-   echo "Enter command name to delete:"
-   read -r name
-   
-   echo "Are you sure you want to delete '$name'? [y/N]"
-   read -r response
-   response=$(echo "$response" | tr '[:lower:]' '[:upper:]')
-   
-   if [ "$response" = "Y" ]; then
-       for target_file in "$GLOBAL_FILE" "$LOCAL_FILE"; do
-           awk -v name="$name" '
-             /^function[[:space:]]*'$name'[[:space:]]*\(\)[[:space:]]*{/,/^}/ {next}
-             {print}
-           ' "$target_file" > temp_file && mv temp_file "$target_file"
-       done
-       
-       grep -v "^$name -" "$HELP_FILE" > temp_file && mv temp_file "$HELP_FILE"
-       
-       source "$GLOBAL_FILE" 2>/dev/null
-       source "$LOCAL_FILE" 2>/dev/null
-       echo "Command '$name' deleted"
-   else
-       echo "Deletion cancelled"
-   fi
+    echo "Enter command name to delete:"
+    read -r name
+    
+    echo "Are you sure you want to delete '$name'? [y/N]"
+    read -r response
+    response=$(echo "$response" | tr '[:lower:]' '[:upper:]')
+    
+    if [ "$response" = "Y" ]; then
+        # Delete from command files
+        for target_file in "$GLOBAL_FILE" "$LOCAL_FILE"; do
+            temp_file=$(mktemp)
+            awk -v name="$name" '
+              /^function[[:space:]]*'$name'[[:space:]]*\(\)[[:space:]]*{/,/^}/ {next}
+              {print}
+            ' "$target_file" > "$temp_file" && mv "$temp_file" "$target_file"
+        done
+        
+        # Delete from help file
+        temp_file=$(mktemp)
+        sed "/^$name -/d" "$HELP_FILE" > "$temp_file" && mv "$temp_file" "$HELP_FILE"
+        
+        source "$GLOBAL_FILE" 2>/dev/null
+        source "$LOCAL_FILE" 2>/dev/null
+        echo "Command '$name' deleted"
+    else
+        echo "Deletion cancelled"
+    fi
 }
 
 case "$1" in

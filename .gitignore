@@ -1,0 +1,4 @@
+temp_file
+*.bak
+.DS_Store
+.shell-commands/local-commands.sh
