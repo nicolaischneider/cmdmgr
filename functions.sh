@@ -47,42 +47,6 @@ list_commands() {
     cat "$HELP_FILE"
 }
 
-check_zshrc() {
-    local zshrc="$HOME/.zshrc"
-    local source_lines=(
-        "# Source shell command manager files"
-        '[ -f "$HOME/.shell-commands/global/global-commands.sh" ] && source "$HOME/.shell-commands/global/global-commands.sh"'
-        '[ -f "$HOME/.shell-commands/local-commands.sh" ] && source "$HOME/.shell-commands/local-commands.sh"'
-    )
-    
-    if ! grep -q "Source shell command manager files" "$zshrc"; then
-        echo "" >> "$zshrc"
-        printf "%s\n" "${source_lines[@]}" >> "$zshrc"
-        source "$zshrc"
-        echo "Added source lines to .zshrc and sourced it."
-    else
-        echo "Source lines already present in .zshrc."
-    fi
-}
-
-uninstall() {
-    echo "Are you sure you want to uninstall? This will remove all commands. [y/N]"
-    read -r response
-    response=$(echo "$response" | tr '[:lower:]' '[:upper:]')
-    
-    if [ "$response" = "Y" ]; then
-        # Remove source lines from .zshrc
-        sed -i '/Source shell command manager files/d' "$HOME/.zshrc"
-        sed -i '/shell-commands\/.*commands.sh/d' "$HOME/.zshrc"
-        
-        # Remove command directory
-        rm -rf "$COMMANDS_DIR"
-        echo "Uninstallation complete. Please restart your shell."
-    else
-        echo "Uninstallation cancelled."
-    fi
-}
-
 delete_command() {
     echo "Enter command name to delete:"
     read -r name
