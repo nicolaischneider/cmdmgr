@@ -9,6 +9,7 @@ The repo for the official killer command manager to make the management of the m
 - [x] test env to play around with implementations
 - [x] delete commands
 - [x] add option to download script and add linking to `.zshrc` file
+- [x] add option to edit directly
 - [ ] add install to system option
 - [ ] each command description should be added as a comment above a function
 - [ ] add update command in case commands have been imported from github (all names and descriptions should be added respectfully)
