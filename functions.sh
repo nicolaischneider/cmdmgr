@@ -74,3 +74,26 @@ delete_command() {
         echo "Deletion cancelled"
     fi
 }
+
+edit_command_file() {
+    local editor="$1"
+    if [ -z "$editor" ]; then
+        editor="vim"  # Default to Vim if no editor is specified
+    fi
+
+    echo "Edit Global or Local commands? ([G|L])"
+    read -r scope
+    scope=$(echo "$scope" | tr '[:lower:]' '[:upper:]')  # Convert input to uppercase for consistency
+
+    if [ "$scope" = "G" ]; then
+        file="$GLOBAL_FILE"  # Global file: $HOME/.shell-commands/global/global-commands.sh
+    elif [ "$scope" = "L" ]; then
+        file="$LOCAL_FILE"   # Local file: $HOME/.shell-commands/local-commands.sh
+    else
+        echo "Invalid choice. Please type 'G' for global or 'L' for local."
+        return 1  # Exit the function with an error status
+    fi
+
+    $editor "$file"  # Open the selected file with the specified editor
+    echo "Editing done. Run 'source ~/.zshrc' to apply any changes."
+}

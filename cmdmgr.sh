@@ -17,12 +17,14 @@ case "$1" in
     "install") install ;;
     "uninstall") uninstall ;;
     "delete") delete_command ;;
-    *) 
-        echo "Usage: $(basename "$0") [create|list|install|uninstall|delete]"
+    "edit") edit_command_file "$2" ;;  # New edit command with optional editor as $2
+    *)
+        echo "Usage: $(basename "$0") [create|list|install|uninstall|delete|edit]"
         echo "  create    - Create a new command"
         echo "  list      - List all available commands"
         echo "  install   - Add source lines to .zshrc"
         echo "  uninstall - Remove all commands and configuration"
         echo "  delete    - Delete an existing command"
+        echo "  edit [editor] - Edit command files with specified editor (default: vim)"
         ;;
 esac
