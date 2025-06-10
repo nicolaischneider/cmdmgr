@@ -34,9 +34,6 @@ create_command() {
         # Add spacing and then the commented function to the target file
         echo "" >> "$target_file"
         cat "$temp_file" >> "$target_file"
-        echo "$name - $description" >> "$(get_help_file)"
-        help_file="$(get_help_file)"
-        sort -o "$help_file" "$help_file"
         echo "Command '$name' added. Please source your .zshrc to use it."
     else
         echo "Command creation cancelled."
@@ -121,10 +118,6 @@ delete_command() {
             ' "$target_file" > "$temp_file" && mv "$temp_file" "$target_file"
         done
         
-        # Delete from help file
-        temp_file=$(mktemp)
-        help_file="$(get_help_file)"
-        sed "/^$name -/d" "$help_file" > "$temp_file" && mv "$temp_file" "$help_file"
         
         echo "Command '$name' deleted. Please source your .zshrc to apply changes."
     else

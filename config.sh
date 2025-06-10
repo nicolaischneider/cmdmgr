@@ -43,13 +43,6 @@ get_global_dir() {
     fi
 }
 
-get_help_file() {
-    if [[ "$ENVIRONMENT_MODE" == "test" ]]; then
-        echo "$SCRIPT_DIR/test-commands/commands-help.txt"
-    else
-        echo "$HOME/.shell-commands/commands-help.txt"
-    fi
-}
 
 get_zshrc_path() {
     if [[ "$ENVIRONMENT_MODE" == "test" ]]; then

@@ -8,7 +8,7 @@ source "$(dirname "$0")/uninstall.sh"
 
 # Create directories using environment-aware paths
 mkdir -p "$(get_global_dir)"
-touch "$(get_global_commands_path)" "$(get_local_commands_path)" "$(get_help_file)"
+touch "$(get_global_commands_path)" "$(get_local_commands_path)"
 chmod +x "$(get_global_commands_path)" "$(get_local_commands_path)"
 
 case "$1" in
