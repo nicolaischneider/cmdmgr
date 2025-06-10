@@ -52,8 +52,8 @@ list_commands() {
             return
         fi
         
-        # Check if file has any functions before proceeding
-        if ! grep -q "^function " "$file"; then
+        # Check if file has any functions before proceeding (both styles)
+        if ! grep -q -E "^function |^[a-zA-Z_][a-zA-Z0-9_]*\(\)" "$file"; then
             return
         fi
         
@@ -68,17 +68,26 @@ list_commands() {
             # Check if line is a comment
             if [[ "$line" =~ ^#[[:space:]](.*)$ ]]; then
                 description="${BASH_REMATCH[1]}"
-            # Check if line is a function definition
-            elif [[ "$line" =~ ^function[[:space:]]+([a-zA-Z_][a-zA-Z0-9_]*)\(\)[[:space:]]*\{ ]]; then
-                func_name="${BASH_REMATCH[1]}"
-                if [[ -n "$description" ]]; then
-                    function_entries="${function_entries}- $func_name: $description"$'\n'
-                else
-                    function_entries="${function_entries}- $func_name: (no description)"$'\n'
+            # Check if line is a function definition (both styles)
+            elif [[ "$line" =~ ^function[[:space:]]+([a-zA-Z_][a-zA-Z0-9_]*)\(\)[[:space:]]*\{ ]] || [[ "$line" =~ ^([a-zA-Z_][a-zA-Z0-9_]*)\(\)[[:space:]]*\{ ]]; then
+                # Extract function name from either format
+                if [[ "$line" =~ ^function[[:space:]]+([a-zA-Z_][a-zA-Z0-9_]*)\(\) ]]; then
+                    func_name="${BASH_REMATCH[1]}"
+                elif [[ "$line" =~ ^([a-zA-Z_][a-zA-Z0-9_]*)\(\) ]]; then
+                    func_name="${BASH_REMATCH[1]}"
                 fi
-                description=""
+                
+                if [[ -n "$func_name" ]]; then
+                    if [[ -n "$description" ]]; then
+                        function_entries="${function_entries}- $func_name: $description"$'\n'
+                    else
+                        function_entries="${function_entries}- $func_name: (no description)"$'\n'
+                    fi
+                    description=""
+                    func_name=""
+                fi
             # Reset description if we encounter other content
-            elif [[ ! "$line" =~ ^[[:space:]]*$ ]] && [[ ! "$line" =~ ^# ]] && [[ ! "$line" =~ ^function ]]; then
+            elif [[ ! "$line" =~ ^[[:space:]]*$ ]] && [[ ! "$line" =~ ^# ]] && [[ ! "$line" =~ ^function ]] && [[ ! "$line" =~ ^[a-zA-Z_][a-zA-Z0-9_]*\(\) ]]; then
                 description=""
             fi
         done < "$file"
