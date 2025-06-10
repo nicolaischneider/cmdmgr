@@ -1,7 +1,7 @@
 #!/bin/bash
 
 create_command() {
-    echo "What's the name?"
+    echo "What's the name of your command?"
     read -r name
 
     echo "What does it do? (Description)"
@@ -22,13 +22,16 @@ create_command() {
 
     temp_file=$(mktemp)
     
-    echo "function $name() {" > "$temp_file"
+    # Create the function template with description comment above it
+    echo "# $description" > "$temp_file"
+    echo "function $name() {" >> "$temp_file"
     echo "  # Your code here" >> "$temp_file"
     echo "}" >> "$temp_file"
 
     vim "$temp_file"
 
     if [ -s "$temp_file" ]; then
+        # Add spacing and then the commented function to the target file
         echo "" >> "$target_file"
         cat "$temp_file" >> "$target_file"
         echo "$name - $description" >> "$(get_help_file)"
