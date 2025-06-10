@@ -45,10 +45,62 @@ create_command() {
     rm "$temp_file"
 }
 
-list_commands() {
-    echo "Available Commands:"
-    echo "=================="
-    cat "$(get_help_file)"
+list_commands() {    
+    # Function to extract functions and descriptions from a file
+    parse_functions() {
+        local file="$1"
+        local section_name="$2"
+        
+        if [ ! -f "$file" ]; then
+            return
+        fi
+        
+        # Check if file has any functions before proceeding
+        if ! grep -q "^function " "$file"; then
+            return
+        fi
+        
+        # Collect all function entries first
+        local function_entries=""
+        local description=""
+        local line_num=0
+        
+        while IFS= read -r line; do
+            line_num=$((line_num + 1))
+            
+            # Check if line is a comment
+            if [[ "$line" =~ ^#[[:space:]](.*)$ ]]; then
+                description="${BASH_REMATCH[1]}"
+            # Check if line is a function definition
+            elif [[ "$line" =~ ^function[[:space:]]+([a-zA-Z_][a-zA-Z0-9_]*)\(\)[[:space:]]*\{ ]]; then
+                func_name="${BASH_REMATCH[1]}"
+                if [[ -n "$description" ]]; then
+                    function_entries="${function_entries}- $func_name: $description"$'\n'
+                else
+                    function_entries="${function_entries}- $func_name: (no description)"$'\n'
+                fi
+                description=""
+            # Reset description if we encounter other content
+            elif [[ ! "$line" =~ ^[[:space:]]*$ ]] && [[ ! "$line" =~ ^# ]] && [[ ! "$line" =~ ^function ]]; then
+                description=""
+            fi
+        done < "$file"
+        
+        # Only display section if we found functions
+        if [[ -n "$function_entries" ]]; then
+            echo ""
+            echo "# $section_name"
+            echo -n "$function_entries"
+        fi
+    }
+    
+    # Parse global commands
+    parse_functions "$(get_global_commands_path)" "Global Commands"
+    
+    # Parse local commands  
+    parse_functions "$(get_local_commands_path)" "Local Commands"
+    
+    echo ""
 }
 
 delete_command() {
