@@ -1,19 +1,22 @@
 #!/bin/bash
 
+# Source path configuration
+source "$(dirname "${BASH_SOURCE[0]}")/paths.sh"
+
 install() {
-    local zshrc="$HOME/.zshrc"
+    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    local zshrc_test="$script_dir/zshrc_test"
     local source_lines=(
         "# Source shell command manager files"
-        '[ -f "$HOME/.shell-commands/global/global-commands.sh" ] && source "$HOME/.shell-commands/global/global-commands.sh"'
-        '[ -f "$HOME/.shell-commands/local-commands.sh" ] && source "$HOME/.shell-commands/local-commands.sh"'
+        "[ -f \"$GLOBAL_COMMANDS_PATH\" ] && source \"$GLOBAL_COMMANDS_PATH\""
+        "[ -f \"$LOCAL_COMMANDS_PATH\" ] && source \"$LOCAL_COMMANDS_PATH\""
     )
     
-    if ! grep -q "Source shell command manager files" "$zshrc"; then
-        echo "" >> "$zshrc"
-        printf "%s\n" "${source_lines[@]}" >> "$zshrc"
-        source "$zshrc"
-        echo "Added source lines to .zshrc and sourced it."
+    if ! [ -f "$zshrc_test" ] || ! grep -q "Source shell command manager files" "$zshrc_test"; then
+        echo "" >> "$zshrc_test"
+        printf "%s\n" "${source_lines[@]}" >> "$zshrc_test"
+        echo "Added source lines to zshrc_test file."
     else
-        echo "Source lines already present in .zshrc."
+        echo "Source lines already present in zshrc_test."
     fi
 }
