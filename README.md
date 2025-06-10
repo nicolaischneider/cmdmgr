@@ -3,7 +3,6 @@
 The repo for the official killer command manager to make the management of the many cool ass commands we have easier then ever.
 
 ## Todos
-- [ ] import existing commands from zshrc file
 - [ ] Global folder should include README
 - [ ] add imported from github command: should cd into empty global folder, then ask for git clone url
 - [ ] option for first upload to github
@@ -23,3 +22,4 @@ The repo for the official killer command manager to make the management of the m
 - [x] extract path to where stuff is stored to new file
 - [x] each command description should be added as a comment above a function
 - [x] get rid of list file and access everything through G and L files and separate in print
+- [x] import existing commands from zshrc file
