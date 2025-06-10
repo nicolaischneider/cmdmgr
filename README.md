@@ -3,12 +3,16 @@
 The repo for the official killer command manager to make the management of the many cool ass commands we have easier then ever.
 
 ## Todos
-- [ ] Global folder should include README
+- [ ] Option to cd into (optionally empty) global folder
+- [ ] Option to pull/push latest changes from global folder
+- [ ] last task: the tool should be installed on the system such that we cann call `cmdmgr` from anywhere
+- [ ] Finalize README with proper description and detailed usage explanation
+
+## Future Scope
 - [ ] add imported from github command: should cd into empty global folder, then ask for git clone url
 - [ ] option for first upload to github
 - [ ] option for commit and push to github, add param to create function to push to github
 - [ ] improve install to show people usage by creating a new function cm to call `cmdmgr`
-- [ ] last task: the tool should be installed on the system such that we cann call `cmdmgr` from anywhere
 
 ## Done
 - [x] basic script to create new commands
