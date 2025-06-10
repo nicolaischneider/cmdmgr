@@ -10,7 +10,7 @@ The repo for the official killer command manager to make the management of the m
 - [ ] Gloabl folder should include README
 - [ ] add update command in case commands have been imported from github (all names and descriptions should be added respectfully)
 - [ ] improve install to show people usage by creating a new function cm to call `cmdmgr`
-- [ ] last task: the tool should be installed on the system such that we cann call cmdmgr from anywhere
+- [ ] last task: the tool should be installed on the system such that we cann call `cmdmgr` from anywhere
 
 ## Done
 - [x] basic script to create new commands
