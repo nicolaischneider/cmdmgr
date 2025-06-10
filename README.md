@@ -6,8 +6,8 @@ The repo for the official killer command manager to make the management of the m
 
 ### Install
 
-- [ ] simulate separate .zshrc file in same folder of code
-- [ ] extract path to where stuff is stored to new file
+- [x] simulate separate .zshrc file in same folder of code
+- [x] extract path to where stuff is stored to new file
 - [ ] add install to system option
 
 ### Features

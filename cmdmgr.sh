@@ -6,10 +6,10 @@ source "$(dirname "$0")/functions.sh"
 source "$(dirname "$0")/install.sh"
 source "$(dirname "$0")/uninstall.sh"
 
-# Create directories
-mkdir -p "$GLOBAL_DIR"
-touch "$GLOBAL_FILE" "$LOCAL_FILE" "$HELP_FILE"
-chmod +x "$GLOBAL_FILE" "$LOCAL_FILE"
+# Create directories using environment-aware paths
+mkdir -p "$(get_global_dir)"
+touch "$(get_global_commands_path)" "$(get_local_commands_path)" "$(get_help_file)"
+chmod +x "$(get_global_commands_path)" "$(get_local_commands_path)"
 
 case "$1" in
     "create") create_command ;;

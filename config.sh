@@ -3,72 +3,57 @@
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Production paths (original paths for actual use)
-COMMANDS_DIR="$HOME/.shell-commands"
-GLOBAL_DIR="$COMMANDS_DIR/global"
-GLOBAL_COMMANDS_PATH="$GLOBAL_DIR/global-commands.sh"
-LOCAL_COMMANDS_PATH="$COMMANDS_DIR/local-commands.sh"
-HELP_FILE="$COMMANDS_DIR/commands-help.txt"
-
-# Legacy aliases for backward compatibility
-GLOBAL_FILE="$GLOBAL_COMMANDS_PATH"
-LOCAL_FILE="$LOCAL_COMMANDS_PATH"
-
-# Test paths (within the project folder for testing)
-TEST_GLOBAL_COMMANDS_PATH="$SCRIPT_DIR/test-commands/global/global-commands.sh"
-TEST_LOCAL_COMMANDS_PATH="$SCRIPT_DIR/test-commands/local-commands.sh"
-TEST_ZSHRC_PATH="$SCRIPT_DIR/zshrc_test"
-TEST_COMMANDS_DIR="$SCRIPT_DIR/test-commands"
-TEST_GLOBAL_DIR="$TEST_COMMANDS_DIR/global"
-TEST_HELP_FILE="$TEST_COMMANDS_DIR/commands-help.txt"
-
 # Environment mode (default to test for now)
 ENVIRONMENT_MODE="test"
+
+# Legacy aliases for backward compatibility
+GLOBAL_FILE=""
+LOCAL_FILE=""
 
 # Environment-aware path functions
 get_global_commands_path() {
     if [[ "$ENVIRONMENT_MODE" == "test" ]]; then
-        echo "$TEST_GLOBAL_COMMANDS_PATH"
+        echo "$SCRIPT_DIR/test-commands/global/global-commands.sh"
     else
-        echo "$GLOBAL_COMMANDS_PATH"
+        echo "$HOME/.shell-commands/global/global-commands.sh"
     fi
 }
 
 get_local_commands_path() {
     if [[ "$ENVIRONMENT_MODE" == "test" ]]; then
-        echo "$TEST_LOCAL_COMMANDS_PATH"
+        echo "$SCRIPT_DIR/test-commands/local-commands.sh"
     else
-        echo "$LOCAL_COMMANDS_PATH"
+        echo "$HOME/.shell-commands/local-commands.sh"
     fi
 }
 
 get_commands_dir() {
     if [[ "$ENVIRONMENT_MODE" == "test" ]]; then
-        echo "$TEST_COMMANDS_DIR"
+        echo "$SCRIPT_DIR/test-commands"
     else
-        echo "$COMMANDS_DIR"
+        echo "$HOME/.shell-commands"
     fi
 }
 
 get_global_dir() {
     if [[ "$ENVIRONMENT_MODE" == "test" ]]; then
-        echo "$TEST_GLOBAL_DIR"
+        echo "$SCRIPT_DIR/test-commands/global"
     else
-        echo "$GLOBAL_DIR"
+        echo "$HOME/.shell-commands/global"
     fi
 }
 
 get_help_file() {
     if [[ "$ENVIRONMENT_MODE" == "test" ]]; then
-        echo "$TEST_HELP_FILE"
+        echo "$SCRIPT_DIR/test-commands/commands-help.txt"
     else
-        echo "$HELP_FILE"
+        echo "$HOME/.shell-commands/commands-help.txt"
     fi
 }
 
 get_zshrc_path() {
     if [[ "$ENVIRONMENT_MODE" == "test" ]]; then
-        echo "$TEST_ZSHRC_PATH"
+        echo "$SCRIPT_DIR/zshrc_test"
     else
         echo "$HOME/.zshrc"
     fi
