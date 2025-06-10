@@ -245,9 +245,10 @@ import_commands() {
             # Comment out the original functions and aliases in zshrc
             comment_out_migrated_items "$zshrc_file" "$target_file"
             
-            echo "Successfully imported $func_count functions and $alias_count aliases to $scope_name commands."
-            echo "Original functions/aliases have been commented out in $zshrc_file with migration markers."
-            echo "Please source $(get_zshrc_path) to use the new commands."
+            echo "> \033[1;32mSuccessfully imported\033[0m $func_count functions and $alias_count aliases to $scope_name commands."
+            echo "--------------------------------"
+            echo "> Original functions/aliases have been commented out in $zshrc_file with migration markers."
+            echo "> Please source $(get_zshrc_path) to use the new commands."
         else
             echo "Import cancelled."
         fi
