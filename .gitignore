@@ -1,6 +1,13 @@
+# Machine
 temp_file
 *.bak
 .DS_Store
+
+# Commands
 .shell-commands/local-commands.sh
+test-commands/
+zshrc_test
+
+# Claude
 CLAUDE.md
 .claude/

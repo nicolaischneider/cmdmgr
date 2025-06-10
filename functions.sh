@@ -12,9 +12,9 @@ create_command() {
     scope=$(echo "$scope" | tr '[:lower:]' '[:upper:]')
 
     if [ "$scope" = "G" ]; then
-        target_file="$GLOBAL_FILE"
+        target_file="$(get_global_commands_path)"
     elif [ "$scope" = "L" ]; then
-        target_file="$LOCAL_FILE"
+        target_file="$(get_local_commands_path)"
     else
         echo "Invalid scope. Use G for global or L for local."
         return 1
@@ -31,8 +31,9 @@ create_command() {
     if [ -s "$temp_file" ]; then
         echo "" >> "$target_file"
         cat "$temp_file" >> "$target_file"
-        echo "$name - $description" >> "$HELP_FILE"
-        sort -o "$HELP_FILE" "$HELP_FILE"
+        echo "$name - $description" >> "$(get_help_file)"
+        help_file="$(get_help_file)"
+        sort -o "$help_file" "$help_file"
         echo "Command '$name' added. Please source your .zshrc to use it."
     else
         echo "Command creation cancelled."
@@ -44,7 +45,7 @@ create_command() {
 list_commands() {
     echo "Available Commands:"
     echo "=================="
-    cat "$HELP_FILE"
+    cat "$(get_help_file)"
 }
 
 delete_command() {
@@ -57,7 +58,7 @@ delete_command() {
     
     if [ "$response" = "Y" ]; then
         # Delete from command files
-        for target_file in "$GLOBAL_FILE" "$LOCAL_FILE"; do
+        for target_file in "$(get_global_commands_path)" "$(get_local_commands_path)"; do
             temp_file=$(mktemp)
             awk -v name="$name" '
               /^function[[:space:]]*'$name'[[:space:]]*\(\)[[:space:]]*{/,/^}/ {next}
@@ -67,7 +68,8 @@ delete_command() {
         
         # Delete from help file
         temp_file=$(mktemp)
-        sed "/^$name -/d" "$HELP_FILE" > "$temp_file" && mv "$temp_file" "$HELP_FILE"
+        help_file="$(get_help_file)"
+        sed "/^$name -/d" "$help_file" > "$temp_file" && mv "$temp_file" "$help_file"
         
         echo "Command '$name' deleted. Please source your .zshrc to apply changes."
     else
@@ -86,14 +88,17 @@ edit_command_file() {
     scope=$(echo "$scope" | tr '[:lower:]' '[:upper:]')  # Convert input to uppercase for consistency
 
     if [ "$scope" = "G" ]; then
-        file="$GLOBAL_FILE"  # Global file: $HOME/.shell-commands/global/global-commands.sh
+        file="$(get_global_commands_path)"  # Global commands file
     elif [ "$scope" = "L" ]; then
-        file="$LOCAL_FILE"   # Local file: $HOME/.shell-commands/local-commands.sh
+        file="$(get_local_commands_path)"   # Local commands file
     else
         echo "Invalid choice. Please type 'G' for global or 'L' for local."
         return 1  # Exit the function with an error status
     fi
 
+    # Ensure directory exists before editing
+    mkdir -p "$(dirname "$file")"
+    
     $editor "$file"  # Open the selected file with the specified editor
-    echo "Editing done. Run 'source ~/.zshrc' to apply any changes."
+    echo "Editing done. Run 'source $(get_zshrc_path)' to apply any changes."
 }
