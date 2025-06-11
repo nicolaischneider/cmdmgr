@@ -3,7 +3,6 @@
 The repo for the official killer command manager to make the management of the many cool ass commands we have easier then ever.
 
 ## Todos
-- [ ] Option to pull/push latest changes from global folder
 - [ ] last task: the tool should be installed on the system such that we cann call `cmdmgr` from anywhere
 - [ ] Finalize README with proper description and detailed usage explanation
 
@@ -27,3 +26,4 @@ The repo for the official killer command manager to make the management of the m
 - [x] get rid of list file and access everything through G and L files and separate in print
 - [x] import existing commands from zshrc file
 - [x] Option to cd into (optionally empty) global folder
+- [x] Option to pull/push latest changes from global folder

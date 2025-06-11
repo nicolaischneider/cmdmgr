@@ -17,22 +17,24 @@ case "$1" in
     "install") install ;;
     "uninstall") uninstall ;;
     "delete") delete_command ;;
-    "edit") edit_command_file "$2" ;;  # Edit command with optional editor as $2
-    "import") import_commands ;;  # Import existing functions and aliases from zshrc
-    "where-global") where_global ;;  # Print path to global commands directory
-    "pull-global") pull_global ;;  # Pull latest changes from git in global commands directory
-    "push-global") push_global ;;  # Add, commit and push changes in global commands directory
+    "edit") edit_command_file "$2" ;;
+    "import") import_commands ;;
+    "where-global") where_global ;;
+    "push-global") push_global ;;
     *)
-        echo "Usage: $(basename "$0") [create|list|install|uninstall|delete|edit|import|where-global|pull-global|push-global]"
-        echo "  create       - Create a new command"
-        echo "  list         - List all available commands"
-        echo "  install      - Add source lines to .zshrc"
-        echo "  uninstall    - Remove all commands and configuration"
-        echo "  delete       - Delete an existing command"
-        echo "  edit [editor] - Edit command files with specified editor (default: vim)"
-        echo "  import       - Import existing functions and aliases from zshrc"
-        echo "  where-global - Print path to global commands directory"
-        echo "  pull-global  - Pull latest changes from git in global commands directory"
-        echo "  push-global  - Add, commit and push changes in global commands directory"
+        printf "Usage: %s [command]\n\n" "$(basename "$0")"
+        printf "Setup & Management:\n"
+        printf "  \033[1minstall\033[0m      - Add source lines to .zshrc\n"
+        printf "  \033[1muninstall\033[0m    - Remove all commands and configuration\n\n"
+        printf "Command Operations:\n"
+        printf "  \033[1mcreate\033[0m       - Create a new command\n"
+        printf "  \033[1mlist\033[0m         - List all available commands\n"
+        printf "  \033[1mdelete\033[0m       - Delete an existing command\n"
+        printf "  \033[1medit\033[0m [editor] - Edit command files with specified editor (default: vim)\n"
+        printf "  \033[1mimport\033[0m       - Import existing functions and aliases from zshrc\n\n"
+        printf "Global Commands Directory:\n"
+        printf "  \033[1mwhere-global\033[0m - Print path to global commands directory\n"
+        printf "  \033[1mpull-global\033[0m  - Pull latest changes from git in global commands directory\n"
+        printf "  \033[1mpush-global\033[0m  - Add, commit and push changes in global commands directory\n"
         ;;
 esac
