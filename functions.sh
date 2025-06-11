@@ -373,3 +373,12 @@ edit_command_file() {
     $editor "$file"  # Open the selected file with the specified editor
     echo "Editing done. Run 'source $(get_zshrc_path)' to apply any changes."
 }
+
+where_global() {
+    local global_dir="$(get_global_dir)"
+    echo "The directory for global commands can be found here:"
+    echo "  $global_dir"
+    echo ""
+    echo "To navigate there, run:"
+    echo "  cd \"$global_dir\""
+}

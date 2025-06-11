@@ -19,14 +19,16 @@ case "$1" in
     "delete") delete_command ;;
     "edit") edit_command_file "$2" ;;  # Edit command with optional editor as $2
     "import") import_commands ;;  # Import existing functions and aliases from zshrc
+    "where-global") where_global ;;  # Print path to global commands directory
     *)
-        echo "Usage: $(basename "$0") [create|list|install|uninstall|delete|edit|import]"
-        echo "  create    - Create a new command"
-        echo "  list      - List all available commands"
-        echo "  install   - Add source lines to .zshrc"
-        echo "  uninstall - Remove all commands and configuration"
-        echo "  delete    - Delete an existing command"
+        echo "Usage: $(basename "$0") [create|list|install|uninstall|delete|edit|import|where-global]"
+        echo "  create       - Create a new command"
+        echo "  list         - List all available commands"
+        echo "  install      - Add source lines to .zshrc"
+        echo "  uninstall    - Remove all commands and configuration"
+        echo "  delete       - Delete an existing command"
         echo "  edit [editor] - Edit command files with specified editor (default: vim)"
-        echo "  import    - Import existing functions and aliases from zshrc"
+        echo "  import       - Import existing functions and aliases from zshrc"
+        echo "  where-global - Print path to global commands directory"
         ;;
 esac

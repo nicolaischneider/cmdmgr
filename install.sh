@@ -26,9 +26,13 @@ install() {
         echo "Installing in PRODUCTION mode - modifying actual .zshrc"
     fi
     
-    # Ensure directories exist
+    # Ensure directories exist and create all command files
     mkdir -p "$(dirname "$global_path")"
     mkdir -p "$(dirname "$local_path")"
+    
+    # Create command files if they don't exist
+    [ ! -f "$global_path" ] && touch "$global_path" && chmod +x "$global_path"
+    [ ! -f "$local_path" ] && touch "$local_path" && chmod +x "$local_path"
     
     # Define the lines that will be added to the target file
     local source_lines=(
