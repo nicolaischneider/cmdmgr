@@ -20,8 +20,10 @@ case "$1" in
     "edit") edit_command_file "$2" ;;  # Edit command with optional editor as $2
     "import") import_commands ;;  # Import existing functions and aliases from zshrc
     "where-global") where_global ;;  # Print path to global commands directory
+    "pull-global") pull_global ;;  # Pull latest changes from git in global commands directory
+    "push-global") push_global ;;  # Add, commit and push changes in global commands directory
     *)
-        echo "Usage: $(basename "$0") [create|list|install|uninstall|delete|edit|import|where-global]"
+        echo "Usage: $(basename "$0") [create|list|install|uninstall|delete|edit|import|where-global|pull-global|push-global]"
         echo "  create       - Create a new command"
         echo "  list         - List all available commands"
         echo "  install      - Add source lines to .zshrc"
@@ -30,5 +32,7 @@ case "$1" in
         echo "  edit [editor] - Edit command files with specified editor (default: vim)"
         echo "  import       - Import existing functions and aliases from zshrc"
         echo "  where-global - Print path to global commands directory"
+        echo "  pull-global  - Pull latest changes from git in global commands directory"
+        echo "  push-global  - Add, commit and push changes in global commands directory"
         ;;
 esac
