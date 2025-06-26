@@ -22,11 +22,7 @@
 
 uninstall() {
     # Get the current environment mode for appropriate messaging
-    if [[ "$ENVIRONMENT_MODE" == "test" ]]; then
-        echo "Are you sure you want to uninstall? This will remove all TEST commands and files. [y/N]"
-    else
-        echo "Are you sure you want to uninstall? This will remove all PRODUCTION commands and files. [y/N]"
-    fi
+    echo "Are you sure you want to uninstall cmdmgr?[y/N]"
     
     # Read user confirmation and convert to uppercase for consistent comparison
     read -r response
@@ -101,23 +97,28 @@ uninstall() {
         fi
         
         echo ""
-        echo "Would you like us to open the file for you to delete these lines? [y/N]"
-        read -r edit_response
-        edit_response=$(echo "$edit_response" | tr '[:lower:]' '[:upper:]')
+        echo "Would you like us to open the commands folder to access your preserved files? [y/N]"
+        read -r open_response
+        open_response=$(echo "$open_response" | tr '[:lower:]' '[:upper:]')
         
-        if [ "$edit_response" = "Y" ]; then
-            # Open the file with the user's preferred editor (default to vim)
-            ${EDITOR:-vim} "$target_zshrc"
-            echo "File closed. Please restart your shell or run the appropriate source command when ready."
-        else
-            echo "Remember to manually remove the lines and restart your shell when ready."
+        if [ "$open_response" = "Y" ]; then
+            # Open the commands directory in Finder/Explorer
+            local commands_dir="$(get_commands_dir)"
+            if [ -d "$commands_dir" ]; then
+                open "$commands_dir"
+                echo "Opened commands folder: $commands_dir"
+            else
+                echo "Commands directory not found: $commands_dir"
+            fi
         fi
+        
+        echo "Remember to manually remove the lines from your .zshrc and restart your shell when ready."
         
         # Provide environment-specific completion message
         if [[ "$ENVIRONMENT_MODE" == "test" ]]; then
             echo "Test environment uninstallation complete."
         else
-            echo "Production uninstallation complete. Please restart your shell or run 'source ~/.zshrc'."
+            echo "Uninstallation complete. Please restart your shell or run 'source ~/.zshrc'."
         fi
     else
         # User chose not to proceed with uninstallation
