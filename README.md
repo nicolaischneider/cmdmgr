@@ -18,6 +18,12 @@ cd cmdmgr
 source ~/.zshrc
 ```
 
+**Care to update?** Go into the directory and call `update`:
+```bash
+cd <path to cmdmgr directory>
+./cmdmgr.sh update
+```
+
 ## Usage
 
 ### Command Operations
@@ -95,7 +101,6 @@ cmdmgr push-global
 
 ## Fixes
 - [ ] import not working as expected (importing everything somehow and also commenting is failing)
-- [ ] when uninstalling it should not offer to open the files but instead iopen the folder in finder/the explorer through `open <path>`
 
 ## Future Scope
 - [ ] add imported from github command: should cd into empty global folder, then ask for git clone url

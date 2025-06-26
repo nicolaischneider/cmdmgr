@@ -143,7 +143,6 @@ show_installation_tutorial() {
     echo "  cmdmgr where     - Show location of global commands directory"
     echo "  cmdmgr pull      - Pull latest changes from global commands git repo"
     echo "  cmdmgr push      - Push changes to global commands git repo"
-    echo "  cmdmgr update    - Update cmdmgr to latest version"
     echo "  cmdmgr uninstall - Remove cmdmgr and all associated files"
     echo ""
     echo "🚀 Quick Start:"
