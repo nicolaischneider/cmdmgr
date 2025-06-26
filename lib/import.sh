@@ -184,6 +184,11 @@ import_commands() {
             echo "# Imported from zshrc on $(date)" >> "$target_file"
             echo "$import_entries" >> "$target_file"
             
+            # Create a backup of the original zshrc before commenting out
+            local zshrc_backup="${zshrc_file}_before_cmdmgr_import"
+            cp "$zshrc_file" "$zshrc_backup"
+            echo "> 🗂️  A backup of your original zshrc has been created at: $zshrc_backup"
+
             # Comment out the imported items in the original zshrc file
             _comment_out_migrated_items "$zshrc_file" "$target_file"
             
