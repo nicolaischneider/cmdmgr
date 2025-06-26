@@ -192,6 +192,19 @@ import_commands() {
             echo "> ⚠️  IMPORTANT: The original functions and aliases have been commented out in your"
             echo "> .zshrc file with clear markers indicating they were migrated."
             echo "> Please source $(get_zshrc_path) to use the new commands."
+            echo ""
+            echo "Would you like to open the commands folder to access your imported files? [y/N]"
+            read -r open_response
+            open_response=$(echo "$open_response" | tr '[:lower:]' '[:upper:]')
+            if [ "$open_response" = "Y" ]; then
+                local commands_dir="$(get_commands_dir)"
+                if [ -d "$commands_dir" ]; then
+                    open "$commands_dir"
+                    echo "Opened commands folder: $commands_dir"
+                else
+                    echo "Commands directory not found: $commands_dir"
+                fi
+            fi
         else
             echo "Import cancelled."
         fi
