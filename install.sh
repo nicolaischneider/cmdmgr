@@ -43,7 +43,7 @@ install() {
         echo "Installing in PRODUCTION mode - modifying actual .zshrc and installing cmdmgr globally"
         
         # Install cmdmgr globally in production mode
-        install_global_cmdmgr
+        _install_global_cmdmgr
     fi
     
     # Ensure directories exist and create all command files
@@ -75,7 +75,7 @@ install() {
             echo "Added source lines to .zshrc."
             
             # Show success tutorial in production mode only
-            show_installation_tutorial
+            _show_installation_tutorial
         fi
     else
         # The lines are already present, so don't add them again
@@ -87,7 +87,8 @@ install() {
     fi
 }
 
-install_global_cmdmgr() {
+# Private function - only used internally within install.sh
+_install_global_cmdmgr() {
     local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     local install_dir="/usr/local/bin"
     local cmdmgr_script="$install_dir/cmdmgr"
@@ -126,8 +127,8 @@ exec \"$script_dir/cmdmgr.sh\" \"\$@\"
     fi
 }
 
-# Display installation success tutorial with available commands
-show_installation_tutorial() {
+# Private function - only used internally within install.sh
+_show_installation_tutorial() {
     echo ""
     echo "🎉 CONGRATULATIONS! cmdmgr has been successfully installed!"
     echo "=========================================================="
@@ -153,4 +154,39 @@ show_installation_tutorial() {
     echo "💡 Tip: Your commands are organized into Global and Local scopes."
     echo "   Global commands are shared across projects, Local are project-specific."
     echo ""
+}
+
+update_cmdmgr() {
+    echo "This will update the cmdmgr installation with the latest code from this directory."
+    echo "Are you sure you want to update cmdmgr? [y/N]"
+    read -r response
+    response=$(echo "$response" | tr '[:lower:]' '[:upper:]')
+    
+    if [ "$response" = "Y" ]; then
+        if [[ "$ENVIRONMENT_MODE" == "test" ]]; then
+            echo "Update not needed in test mode - you're already using the latest code."
+            return 0
+        fi
+        
+        # Check if cmdmgr is globally installed
+        if [ ! -f "/usr/local/bin/cmdmgr" ]; then
+            echo "cmdmgr is not globally installed. Run 'install' first."
+            return 1
+        fi
+        
+        echo "Updating cmdmgr global installation..."
+        
+        # Call _install_global_cmdmgr directly since we're in the same file
+        _install_global_cmdmgr
+        
+        if [ $? -eq 0 ]; then
+            echo "✓ cmdmgr update completed successfully!"
+            echo "The global cmdmgr command now points to the latest code."
+        else
+            echo "✗ cmdmgr update failed"
+            return 1
+        fi
+    else
+        echo "Update cancelled."
+    fi
 }

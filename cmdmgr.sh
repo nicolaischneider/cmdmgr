@@ -1,8 +1,11 @@
 #!/bin/bash
 
-# Source configuration and functions
+# Source configuration and all library modules
 source "$(dirname "$0")/config.sh"
-source "$(dirname "$0")/functions.sh"
+source "$(dirname "$0")/lib/command-operations.sh"
+source "$(dirname "$0")/lib/command-parsing.sh"
+source "$(dirname "$0")/lib/command-import.sh"
+source "$(dirname "$0")/lib/git-operations.sh"
 source "$(dirname "$0")/install.sh"
 source "$(dirname "$0")/uninstall.sh"
 

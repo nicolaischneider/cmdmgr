@@ -49,7 +49,7 @@ uninstall() {
         
         # Remove global cmdmgr installation in production mode
         if [[ "$ENVIRONMENT_MODE" != "test" ]]; then
-            uninstall_global_cmdmgr
+            _uninstall_global_cmdmgr
         fi
         
         # Show preserved command files and their locations
@@ -126,7 +126,8 @@ uninstall() {
     fi
 }
 
-uninstall_global_cmdmgr() {
+# Private function - only used internally within uninstall.sh
+_uninstall_global_cmdmgr() {
     local install_dir="/usr/local/bin"
     local cmdmgr_script="$install_dir/cmdmgr"
     
