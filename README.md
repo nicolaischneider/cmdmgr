@@ -1,3 +1,7 @@
+<p align="center">
+    <img src="cmdmgr.png" width="1000" alt="cmdmgr"/>
+</p>
+
 # Command Manager
 
 A bash-based command manager designed to help developers and power users create, organize, and manage custom shell commands efficiently. This tool eliminates the need to clutter your `.zshrc` file with countless aliases and functions by providing a structured way to organize commands into global and local scopes.
