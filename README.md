@@ -99,11 +99,7 @@ cmdmgr pull-global
 cmdmgr push-global
 ```
 
-## Fixes
-- [ ] import not working as expected (importing everything somehow and also commenting is failing)
-
 ## Future Scope
 - [ ] add imported from github command: should cd into empty global folder, then ask for git clone url
 - [ ] option for first upload to github
 - [ ] option for commit and push to github, add param to create function to push to github
-- [ ] improve install to show people usage by creating a new function cm to call `cmdmgr`
