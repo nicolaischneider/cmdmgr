@@ -59,16 +59,3 @@ parse_functions_from_file() {
         echo -n "$function_entries"
     fi
 }
-
-list_commands() {    
-    echo "Available Commands:"
-    echo "=================="
-    
-    # Parse global commands
-    parse_functions_from_file "$(get_global_commands_path)" "Global Commands"
-    
-    # Parse local commands  
-    parse_functions_from_file "$(get_local_commands_path)" "Local Commands"
-    
-    echo ""
-}

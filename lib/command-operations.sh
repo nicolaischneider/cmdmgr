@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Command Operations Module
-# Contains functions for creating, deleting, and editing commands
+# Contains functions for creating, deleting, editing and listing commands
 
 create_command() {
     echo "What's the name of your command?"
@@ -94,4 +94,17 @@ edit_command_file() {
     
     $editor "$file"  # Open the selected file with the specified editor
     echo "Editing done. Run 'source $(get_zshrc_path)' to apply any changes."
+}
+
+list_commands() {    
+    echo "Available Commands:"
+    echo "=================="
+    
+    # Parse global commands
+    parse_functions_from_file "$(get_global_commands_path)" "Global Commands"
+    
+    # Parse local commands  
+    parse_functions_from_file "$(get_local_commands_path)" "Local Commands"
+    
+    echo ""
 }
