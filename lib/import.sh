@@ -168,8 +168,8 @@ import_commands() {
     
     if [[ -n "$import_entries" ]]; then
         echo ""
-        echo "⚠️  IMPORTANT: After importing, you may want to manually remove or comment out"
-        echo "   the original aliases and functions from your .zshrc file to avoid conflicts."
+        echo "⚠️  IMPORTANT: After importing, the original aliases and functions from your .zshrc file"
+        echo "   will be commented out to avoid conflicts."
         echo ""
         echo "Do you want to proceed with the import? [y/N]"
         read -r response
