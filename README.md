@@ -2,7 +2,12 @@
     <img src="cmdmgr.png" width="1000" alt="cmdmgr"/>
 </p>
 
-# Command Manager
+![Bash](https://img.shields.io/badge/Bash-4.0%2B-blue)
+![Shell](https://img.shields.io/badge/Shell-Zsh%2FBash-green)
+![Platform](https://img.shields.io/badge/Platform-macOS%2FLinux-lightgrey)
+![License](https://img.shields.io/badge/License-MIT-green)
+
+# cmdmgr (Command Manager)
 
 A bash-based command manager designed to help developers and power users create, organize, and manage custom shell commands efficiently. This tool eliminates the need to clutter your `.zshrc` file with countless aliases and functions by providing a structured way to organize commands into global and local scopes.
 
