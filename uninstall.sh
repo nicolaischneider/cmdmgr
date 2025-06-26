@@ -1,5 +1,25 @@
 #!/bin/bash
 
+# UNINSTALL FUNCTION EXPLANATION:
+# ===============================
+# This script handles the removal of cmdmgr installation in a safe, user-friendly way:
+#
+# WHAT IT REMOVES:
+# - Global cmdmgr binary from /usr/local/bin/cmdmgr (production mode only)
+# - Requires manual removal of sourcing lines from .zshrc (shows exact lines to delete)
+#
+# WHAT IT PRESERVES:
+# - All user command files (~/.shell-commands/global/global-commands.sh)
+# - All user command files (~/.shell-commands/local-commands.sh)
+# - Shows exact file paths and command counts so users can manually import back to .zshrc
+# - Does NOT delete any user-created commands or directories
+#
+# SAFETY FEATURES:
+# - Requires explicit user confirmation before proceeding
+# - Offers to open .zshrc file for manual editing
+# - Provides clear instructions for cleanup steps
+# - Shows preserved command files with their locations and command counts
+
 uninstall() {
     # Get the current environment mode for appropriate messaging
     if [[ "$ENVIRONMENT_MODE" == "test" ]]; then
@@ -16,19 +36,52 @@ uninstall() {
     if [ "$response" = "Y" ]; then
         # Get environment-aware paths
         local target_zshrc="$(get_zshrc_path)"
-        local commands_dir="$(get_commands_dir)"
+        local global_commands_file="$(get_global_commands_path)"
+        local local_commands_file="$(get_local_commands_path)"
         
-        # Remove the entire commands directory and all its contents
-        # This includes global commands, local commands, and help files
-        if [ -d "$commands_dir" ]; then
-            rm -rf "$commands_dir"
-            echo "Removed commands directory: $commands_dir"
-        else
-            echo "Commands directory not found: $commands_dir"
+        # Count existing commands in files before uninstalling
+        local global_count=0
+        local local_count=0
+        
+        if [ -f "$global_commands_file" ]; then
+            global_count=$(grep -c "^function\|^[a-zA-Z_][a-zA-Z0-9_]*(" "$global_commands_file" 2>/dev/null || echo 0)
         fi
         
-        # Handle zshrc cleanup - manual process for both test and production
+        if [ -f "$local_commands_file" ]; then
+            local_count=$(grep -c "^function\|^[a-zA-Z_][a-zA-Z0-9_]*(" "$local_commands_file" 2>/dev/null || echo 0)
+        fi
+        
+        # Remove global cmdmgr installation in production mode
+        if [[ "$ENVIRONMENT_MODE" != "test" ]]; then
+            uninstall_global_cmdmgr
+        fi
+        
+        # Show preserved command files and their locations
         echo ""
+        echo "🗂️  PRESERVED COMMAND FILES:"
+        echo "============================================"
+        echo ""
+        
+        if [ -f "$global_commands_file" ]; then
+            echo "📁 Global Commands: $global_commands_file"
+            echo "   └── Contains $global_count command(s)"
+        else
+            echo "📁 Global Commands: $global_commands_file (file not found)"
+        fi
+        
+        if [ -f "$local_commands_file" ]; then
+            echo "📁 Local Commands: $local_commands_file"
+            echo "   └── Contains $local_count command(s)"
+        else
+            echo "📁 Local Commands: $local_commands_file (file not found)"
+        fi
+        
+        echo ""
+        echo "💡 These files contain your custom commands and have NOT been deleted."
+        echo "   You can manually copy functions back to your .zshrc if needed."
+        echo ""
+        
+        # Handle zshrc cleanup - manual process for both test and production
         echo "=========================================="
         echo "IMPORTANT: Manual cleanup required!"
         echo "=========================================="
@@ -69,5 +122,28 @@ uninstall() {
     else
         # User chose not to proceed with uninstallation
         echo "Uninstallation cancelled."
+    fi
+}
+
+uninstall_global_cmdmgr() {
+    local install_dir="/usr/local/bin"
+    local cmdmgr_script="$install_dir/cmdmgr"
+    
+    if [ -f "$cmdmgr_script" ]; then
+        # Check if we have write permissions to /usr/local/bin
+        if [ ! -w "$install_dir" ]; then
+            echo "Removing global cmdmgr requires sudo permissions..."
+            sudo rm -f "$cmdmgr_script"
+        else
+            rm -f "$cmdmgr_script"
+        fi
+        
+        if [ ! -f "$cmdmgr_script" ]; then
+            echo "✓ Removed global cmdmgr installation from: $cmdmgr_script"
+        else
+            echo "✗ Failed to remove global cmdmgr installation"
+        fi
+    else
+        echo "Global cmdmgr installation not found at: $cmdmgr_script"
     fi
 }

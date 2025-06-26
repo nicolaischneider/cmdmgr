@@ -16,16 +16,19 @@ case "$1" in
     "list") list_commands ;;
     "install") install ;;
     "uninstall") uninstall ;;
+    "update") update_cmdmgr ;;
     "delete") delete_command ;;
     "edit") edit_command_file "$2" ;;
     "import") import_commands ;;
     "where-global") where_global ;;
+    "pull-global") pull_global ;;
     "push-global") push_global ;;
     *)
         printf "Usage: %s [command]\n\n" "$(basename "$0")"
         printf "Setup & Management:\n"
         printf "  \033[1minstall\033[0m      - Add source lines to .zshrc\n"
-        printf "  \033[1muninstall\033[0m    - Remove all commands and configuration\n\n"
+        printf "  \033[1muninstall\033[0m    - Remove all commands and configuration\n"
+        printf "  \033[1mupdate\033[0m       - Update cmdmgr installation with latest code\n\n"
         printf "Command Operations:\n"
         printf "  \033[1mcreate\033[0m       - Create a new command\n"
         printf "  \033[1mlist\033[0m         - List all available commands\n"

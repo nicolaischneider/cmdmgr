@@ -94,8 +94,11 @@ cmdmgr push-global
 ```
 
 ## Todos
-- [ ] last task: the tool should be installed on the system such that we cann call `cmdmgr` from anywhere
-- [ ] Finalize README with proper description and detailed usage explanation
+- [x] last task: the tool should be installed on the system such that we cann call `cmdmgr` from anywhere
+
+## Fixes
+- [ ] import not working as expected (importing everything somehow and also commenting is failing)
+- [ ] when uninstalling it should not offer to open the files but instead iopen the folder in finder/the explorer through `open <path>`
 
 ## Future Scope
 - [ ] add imported from github command: should cd into empty global folder, then ask for git clone url

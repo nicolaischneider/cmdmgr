@@ -4,7 +4,7 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Environment mode (default to test for now)
-ENVIRONMENT_MODE="test"
+ENVIRONMENT_MODE="production"
 
 # Legacy aliases for backward compatibility
 GLOBAL_FILE=""

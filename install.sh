@@ -1,5 +1,22 @@
 #!/bin/bash
 
+# INSTALL FUNCTION EXPLANATION:
+# =============================
+# This script handles the installation of cmdmgr in two phases:
+#
+# PHASE 1: Shell Integration Setup
+# - Creates ~/.shell-commands/ directory structure for storing user commands
+# - Adds sourcing lines to .zshrc so commands are available in new shell sessions
+# - Creates empty global-commands.sh and local-commands.sh files if they don't exist
+#
+# PHASE 2: Global Binary Installation (Production Mode Only)
+# - Creates a wrapper script at /usr/local/bin/cmdmgr that calls the main cmdmgr.sh
+# - This allows users to type 'cmdmgr' from anywhere in the terminal
+# - Requires sudo permissions to write to /usr/local/bin/
+# - Shows tutorial with available commands and import suggestion
+#
+# Test mode only does Phase 1 with test files in the project directory
+
 # Source configuration
 source "$(dirname "${BASH_SOURCE[0]}")/config.sh"
 
@@ -23,7 +40,10 @@ install() {
         echo "Installing in TEST mode - files will be created in project folder"
     else
         local marker_comment="Source shell command manager files"
-        echo "Installing in PRODUCTION mode - modifying actual .zshrc"
+        echo "Installing in PRODUCTION mode - modifying actual .zshrc and installing cmdmgr globally"
+        
+        # Install cmdmgr globally in production mode
+        install_global_cmdmgr
     fi
     
     # Ensure directories exist and create all command files
@@ -52,8 +72,10 @@ install() {
         if [[ "$ENVIRONMENT_MODE" == "test" ]]; then
             echo "Added source lines to zshrc_test file in project folder."
         else
-            echo "Added source lines to .zshrc and sourced it."
-            source "$target_file"
+            echo "Added source lines to .zshrc."
+            
+            # Show success tutorial in production mode only
+            show_installation_tutorial
         fi
     else
         # The lines are already present, so don't add them again
@@ -63,4 +85,73 @@ install() {
             echo "Source lines already present in .zshrc."
         fi
     fi
+}
+
+install_global_cmdmgr() {
+    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    local install_dir="/usr/local/bin"
+    local cmdmgr_script="$install_dir/cmdmgr"
+    
+    # Check if we have write permissions to /usr/local/bin
+    if [ ! -w "$install_dir" ]; then
+        echo "Installing cmdmgr globally requires sudo permissions..."
+        sudo_required="true"
+    else
+        sudo_required="false"
+    fi
+    
+    # Create the cmdmgr wrapper script
+    local wrapper_content="#!/bin/bash
+# cmdmgr global wrapper script
+# This script calls the original cmdmgr.sh with all arguments
+
+exec \"$script_dir/cmdmgr.sh\" \"\$@\"
+"
+    
+    # Install the wrapper script
+    if [[ "$sudo_required" == "true" ]]; then
+        echo "$wrapper_content" | sudo tee "$cmdmgr_script" > /dev/null
+        sudo chmod +x "$cmdmgr_script"
+    else
+        echo "$wrapper_content" > "$cmdmgr_script"
+        chmod +x "$cmdmgr_script"
+    fi
+    
+    if [ -f "$cmdmgr_script" ]; then
+        echo "✓ cmdmgr installed globally at: $cmdmgr_script"
+        echo "✓ You can now use 'cmdmgr <command>' from anywhere"
+    else
+        echo "✗ Failed to install cmdmgr globally"
+        return 1
+    fi
+}
+
+# Display installation success tutorial with available commands
+show_installation_tutorial() {
+    echo ""
+    echo "🎉 CONGRATULATIONS! cmdmgr has been successfully installed!"
+    echo "=========================================================="
+    echo ""
+    echo "You can now use 'cmdmgr' from anywhere in your terminal."
+    echo ""
+    echo "📋 Available Commands:"
+    echo "  cmdmgr create    - Create a new shell command (interactive)"
+    echo "  cmdmgr list      - List all your available commands"
+    echo "  cmdmgr import    - Import existing commands from your .zshrc file"
+    echo "  cmdmgr delete    - Delete an existing command (interactive)"
+    echo "  cmdmgr edit      - Edit command files with your preferred editor"
+    echo "  cmdmgr where     - Show location of global commands directory"
+    echo "  cmdmgr pull      - Pull latest changes from global commands git repo"
+    echo "  cmdmgr push      - Push changes to global commands git repo"
+    echo "  cmdmgr update    - Update cmdmgr to latest version"
+    echo "  cmdmgr uninstall - Remove cmdmgr and all associated files"
+    echo ""
+    echo "🚀 Quick Start:"
+    echo "  1. Import your existing .zshrc commands: 'cmdmgr import'"
+    echo "  2. Create your first new command: 'cmdmgr create'"
+    echo "  3. List all available commands: 'cmdmgr list'"
+    echo ""
+    echo "💡 Tip: Your commands are organized into Global and Local scopes."
+    echo "   Global commands are shared across projects, Local are project-specific."
+    echo ""
 }

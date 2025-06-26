@@ -420,3 +420,39 @@ push_global() {
     echo "Pushing changes in global commands directory..."
     cd "$global_dir" && git add . && git commit -m "updated global commands" && git push
 }
+
+update_cmdmgr() {
+    echo "This will update the cmdmgr installation with the latest code from this directory."
+    echo "Are you sure you want to update cmdmgr? [y/N]"
+    read -r response
+    response=$(echo "$response" | tr '[:lower:]' '[:upper:]')
+    
+    if [ "$response" = "Y" ]; then
+        if [[ "$ENVIRONMENT_MODE" == "test" ]]; then
+            echo "Update not needed in test mode - you're already using the latest code."
+            return 0
+        fi
+        
+        # Check if cmdmgr is globally installed
+        if [ ! -f "/usr/local/bin/cmdmgr" ]; then
+            echo "cmdmgr is not globally installed. Run 'install' first."
+            return 1
+        fi
+        
+        echo "Updating cmdmgr global installation..."
+        
+        # Source the install function and call install_global_cmdmgr
+        source "$(dirname "${BASH_SOURCE[0]}")/install.sh"
+        install_global_cmdmgr
+        
+        if [ $? -eq 0 ]; then
+            echo "✓ cmdmgr update completed successfully!"
+            echo "The global cmdmgr command now points to the latest code."
+        else
+            echo "✗ cmdmgr update failed"
+            return 1
+        fi
+    else
+        echo "Update cancelled."
+    fi
+}
