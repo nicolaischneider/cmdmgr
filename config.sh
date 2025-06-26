@@ -3,8 +3,8 @@
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Environment mode (default to test for now)
-ENVIRONMENT_MODE="production"
+# Environment mode (production/test)
+ENVIRONMENT_MODE="test"
 
 # Legacy aliases for backward compatibility
 GLOBAL_FILE=""

@@ -31,6 +31,7 @@ case "$1" in
         printf "Setup & Management:\n"
         printf "  \033[1minstall\033[0m      - Add source lines to .zshrc\n"
         printf "  \033[1muninstall\033[0m    - Remove all commands and configuration\n"
+        printf "  \033[1mupdate\033[0m       - Update cmdmgr installation with latest code\n"
         printf "Command Operations:\n"
         printf "  \033[1mcreate\033[0m       - Create a new command\n"
         printf "  \033[1mlist\033[0m         - List all available commands\n"

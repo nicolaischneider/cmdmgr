@@ -30,95 +30,147 @@ import_commands() {
         return 1
     fi
     
+    # Read entire file into an array (compatible with older bash)
+    local lines=()
+    local line_count=0
+    while IFS= read -r line; do
+        lines[line_count]="$line"
+        ((line_count++))
+    done < "$zshrc_file"
+    
     # Parse and collect functions and aliases
     local import_entries=""
     local description=""
-    local line_num=0
     local func_count=0
     local alias_count=0
+    local i=0
     
-    while IFS= read -r line; do
-        line_num=$((line_num + 1))
+    echo "Debug: Total lines read: $line_count"
+    
+    while [ $i -lt $line_count ]; do
+        local line="${lines[$i]}"
         
         # Skip our own command manager source lines
         if [[ "$line" =~ "Source shell command manager files" ]] || [[ "$line" =~ "shell-commands" ]] || [[ "$line" =~ "test-commands" ]]; then
+            ((i++))
             continue
         fi
         
         # Check if line is a comment that could be a description
-        if [[ "$line" =~ ^#[[:space:]](.*)$ ]]; then
+        if [[ "$line" =~ ^[[:space:]]*#{1,}[[:space:]]*(.*)$ ]]; then
             description="${BASH_REMATCH[1]}"
+            ((i++))
+            continue
+        fi
+        
         # Check for alias definitions
-        elif [[ "$line" =~ ^alias[[:space:]]+([a-zA-Z_][a-zA-Z0-9_]*)=\"(.*)\"$ ]]; then
+        if [[ "$line" =~ ^[[:space:]]*alias[[:space:]]+([a-zA-Z_][a-zA-Z0-9_]*)=\"(.*)\"$ ]] || [[ "$line" =~ ^[[:space:]]*alias[[:space:]]+([a-zA-Z_][a-zA-Z0-9_]*)=\'(.*)\'$ ]]; then
             alias_name="${BASH_REMATCH[1]}"
             alias_command="${BASH_REMATCH[2]}"
+            echo "Debug: Found alias: $alias_name"
             
             # Create function entry for alias
-            import_entries="${import_entries}# $alias_command"$'\n'
+            if [[ -n "$description" ]]; then
+                import_entries="${import_entries}# $description"$'\n'
+            else
+                import_entries="${import_entries}# Alias: $alias_command"$'\n'
+            fi
             import_entries="${import_entries}function $alias_name() {"$'\n'
-            import_entries="${import_entries}  $alias_command"$'\n'
+            import_entries="${import_entries}    $alias_command \"\$@\""$'\n'
             import_entries="${import_entries}}"$'\n\n'
             
             alias_count=$((alias_count + 1))
             description=""
-        # Check for function definitions (both styles)
-        elif [[ "$line" =~ ^function[[:space:]]+([a-zA-Z_][a-zA-Z0-9_]*)\(\)[[:space:]]*\{ ]] || [[ "$line" =~ ^([a-zA-Z_][a-zA-Z0-9_]*)\(\)[[:space:]]*\{ ]]; then
-            # Extract function name from either format
-            if [[ "$line" =~ ^function[[:space:]]+([a-zA-Z_][a-zA-Z0-9_]*)\(\) ]]; then
-                func_name="${BASH_REMATCH[1]}"
-            elif [[ "$line" =~ ^([a-zA-Z_][a-zA-Z0-9_]*)\(\) ]]; then
-                func_name="${BASH_REMATCH[1]}"
+            ((i++))
+            continue
+        fi
+        
+        # Check for function definitions - handle multiple styles
+        local func_name=""
+        local func_start_line=$i
+        
+        # Pattern 1: function name() { or function name () {
+        if [[ "$line" =~ ^[[:space:]]*function[[:space:]]+([a-zA-Z_][a-zA-Z0-9_]*)[[:space:]]*\(\)[[:space:]]*\{? ]]; then
+            func_name="${BASH_REMATCH[1]}"
+        # Pattern 2: name() { or name () {
+        elif [[ "$line" =~ ^[[:space:]]*([a-zA-Z_][a-zA-Z0-9_]*)[[:space:]]*\(\)[[:space:]]*\{? ]]; then
+            func_name="${BASH_REMATCH[1]}"
+        fi
+        
+        if [[ -n "$func_name" ]]; then
+            echo "Debug: Found function: $func_name at line $i"
+            # Initialize function body with the declaration line
+            local func_body="$line"
+            local brace_count=0
+            local j=$i
+            
+            # Check if opening brace is on the same line
+            if [[ "$line" =~ \{ ]]; then
+                brace_count=1
             fi
             
-            if [[ -n "$func_name" ]]; then
-                # Extract function body until closing brace
-                local func_body="$line"$'\n'
-                local brace_count=1
-                
-                while IFS= read -r func_line && [ $brace_count -gt 0 ]; do
-                    func_body="${func_body}${func_line}"$'\n'
-                    
-                    # Count braces to find function end
-                    if [[ "$func_line" =~ \{ ]]; then
-                        brace_count=$((brace_count + 1))
-                    fi
-                    if [[ "$func_line" =~ ^\} ]]; then
-                        brace_count=$((brace_count - 1))
-                    fi
-                done
-                
-                # Add function with description
-                if [[ -n "$description" ]]; then
-                    import_entries="${import_entries}# $description"$'\n'
-                else
-                    import_entries="${import_entries}# no description provided"$'\n'
+            # Move to next line
+            ((j++))
+            
+            # If no opening brace yet, look for it on the next line
+            if [ $brace_count -eq 0 ] && [ $j -lt $line_count ]; then
+                local next_line="${lines[$j]}"
+                func_body="${func_body}"$'\n'"${next_line}"
+                if [[ "$next_line" =~ \{ ]]; then
+                    brace_count=1
+                    ((j++))
                 fi
-                import_entries="${import_entries}${func_body}"$'\n'
-                
-                func_count=$((func_count + 1))
-                description=""
-                func_name=""
             fi
-        # Reset description if we encounter other content
-        elif [[ ! "$line" =~ ^[[:space:]]*$ ]] && [[ ! "$line" =~ ^# ]] && [[ ! "$line" =~ ^function ]] && [[ ! "$line" =~ ^[a-zA-Z_][a-zA-Z0-9_]*\(\) ]] && [[ ! "$line" =~ ^alias ]]; then
+            
+            # Extract function body until closing brace
+            while [ $j -lt $line_count ] && [ $brace_count -gt 0 ]; do
+                local func_line="${lines[$j]}"
+                func_body="${func_body}"$'\n'"${func_line}"
+                
+                # Count braces more accurately
+                # Count opening braces
+                local open_braces=$(echo "$func_line" | grep -o '{' | wc -l | tr -d ' ')
+                brace_count=$((brace_count + open_braces))
+                
+                # Count closing braces
+                local close_braces=$(echo "$func_line" | grep -o '}' | wc -l | tr -d ' ')
+                brace_count=$((brace_count - close_braces))
+                
+                ((j++))
+            done
+            
+            # Add function with description
+            if [[ -n "$description" ]]; then
+                import_entries="${import_entries}# $description"$'\n'
+            else
+                import_entries="${import_entries}# Function: $func_name"$'\n'
+            fi
+            import_entries="${import_entries}${func_body}"$'\n\n'
+            
+            func_count=$((func_count + 1))
+            description=""
+            
+            # Update index to continue after the function
+            i=$j
+            continue
+        fi
+        
+        # Reset description if we encounter non-comment, non-function, non-alias content
+        if [[ ! "$line" =~ ^[[:space:]]*$ ]] && [[ ! "$line" =~ ^[[:space:]]*# ]]; then
             description=""
         fi
-    done < "$zshrc_file"
+        
+        ((i++))
+    done
     
     # Show what will be imported
     echo "Found $func_count functions and $alias_count aliases to import to $scope_name commands:"
     echo "================================="
     
     if [[ -n "$import_entries" ]]; then
-        # Create a temporary file to display the preview
-        local temp_preview=$(mktemp)
-        echo "$import_entries" > "$temp_preview"
-        parse_functions_from_file "$temp_preview" "Functions and Aliases to Import"
-        rm "$temp_preview"
-        
         echo ""
-        echo "⚠️  IMPORTANT: After importing, you should remove the original aliases and functions"
-        echo "   from your zshrc file to avoid conflicts and duplicates."
+        echo "⚠️  IMPORTANT: After importing, you may want to manually remove or comment out"
+        echo "   the original aliases and functions from your .zshrc file to avoid conflicts."
         echo ""
         echo "Do you want to proceed with the import? [y/N]"
         read -r response
@@ -133,12 +185,10 @@ import_commands() {
             echo "# Imported from zshrc on $(date)" >> "$target_file"
             echo "$import_entries" >> "$target_file"
             
-            # Comment out the original functions and aliases in zshrc
-            _comment_out_migrated_items "$zshrc_file" "$target_file"
-            
-            echo "> \033[1;32mSuccessfully imported\033[0m $func_count functions and $alias_count aliases to $scope_name commands."
+            echo "> ✅ Successfully imported $func_count functions and $alias_count aliases to $scope_name commands."
             echo "--------------------------------"
-            echo "> Original functions/aliases have been commented out in $zshrc_file with migration markers."
+            echo "> ⚠️  IMPORTANT: You may want to manually remove or comment out the original functions"
+            echo "> from your .zshrc file to avoid conflicts and duplicates."
             echo "> Please source $(get_zshrc_path) to use the new commands."
         else
             echo "Import cancelled."
@@ -155,58 +205,90 @@ _comment_out_migrated_items() {
     local target_file_name=$(basename "$target_file")
     local current_date=$(date '+%Y-%m-%d %H:%M:%S')
     
+    # Read entire file into an array (compatible with older bash)
+    local lines=()
+    local line_count=0
+    while IFS= read -r line; do
+        lines[line_count]="$line"
+        ((line_count++))
+    done < "$source_file"
+    
     # Create a temporary file for the modified zshrc
     local temp_file=$(mktemp)
-    local in_function=false
-    local function_name=""
-    local brace_count=0
+    local i=0
     
-    while IFS= read -r line; do
+    while [ $i -lt $line_count ]; do
+        local line="${lines[$i]}"
+        
         # Skip our own command manager source lines (don't comment these out)
         if [[ "$line" =~ "Source shell command manager files" ]] || [[ "$line" =~ "shell-commands" ]] || [[ "$line" =~ "test-commands" ]]; then
             echo "$line" >> "$temp_file"
+            ((i++))
             continue
         fi
         
         # Check for alias definitions
-        if [[ "$line" =~ ^alias[[:space:]]+([a-zA-Z_][a-zA-Z0-9_]*)= ]]; then
+        if [[ "$line" =~ ^[[:space:]]*alias[[:space:]]+([a-zA-Z_][a-zA-Z0-9_]*)= ]]; then
             alias_name="${BASH_REMATCH[1]}"
             echo "# MIGRATED TO $target_file - [$current_date], CAN BE DELETED" >> "$temp_file"
             echo "# $line" >> "$temp_file"
-        # Check for function definitions (both styles)
-        elif [[ "$line" =~ ^function[[:space:]]+([a-zA-Z_][a-zA-Z0-9_]*)\(\)[[:space:]]*\{ ]] || [[ "$line" =~ ^([a-zA-Z_][a-zA-Z0-9_]*)\(\)[[:space:]]*\{ ]]; then
-            # Extract function name from either format
-            if [[ "$line" =~ ^function[[:space:]]+([a-zA-Z_][a-zA-Z0-9_]*)\(\) ]]; then
-                function_name="${BASH_REMATCH[1]}"
-            elif [[ "$line" =~ ^([a-zA-Z_][a-zA-Z0-9_]*)\(\) ]]; then
-                function_name="${BASH_REMATCH[1]}"
-            fi
-            
-            # Start commenting out this function
-            in_function=true
-            brace_count=1
-            echo "# MIGRATED TO $target_file - [$current_date], CAN BE DELETED" >> "$temp_file"
-            echo "# $line" >> "$temp_file"
-        elif [[ "$in_function" == true ]]; then
-            # We're inside a function that's being commented out
-            echo "# $line" >> "$temp_file"
-            
-            # Count braces to find function end
-            if [[ "$line" =~ \{ ]]; then
-                brace_count=$((brace_count + 1))
-            fi
-            if [[ "$line" =~ ^\} ]]; then
-                brace_count=$((brace_count - 1))
-                if [[ $brace_count -eq 0 ]]; then
-                    in_function=false
-                    function_name=""
-                fi
-            fi
-        else
-            # Regular line, keep as-is
-            echo "$line" >> "$temp_file"
+            ((i++))
+            continue
         fi
-    done < "$source_file"
+        
+        # Check for function definitions
+        local func_name=""
+        if [[ "$line" =~ ^[[:space:]]*function[[:space:]]+([a-zA-Z_][a-zA-Z0-9_]*)[[:space:]]*\(\) ]] || [[ "$line" =~ ^[[:space:]]*([a-zA-Z_][a-zA-Z0-9_]*)[[:space:]]*\(\) ]]; then
+            # Extract function name
+            if [[ "$line" =~ ^[[:space:]]*function[[:space:]]+([a-zA-Z_][a-zA-Z0-9_]*) ]]; then
+                func_name="${BASH_REMATCH[1]}"
+            elif [[ "$line" =~ ^[[:space:]]*([a-zA-Z_][a-zA-Z0-9_]*)[[:space:]]*\(\) ]]; then
+                func_name="${BASH_REMATCH[1]}"
+            fi
+            
+            if [[ -n "$func_name" ]]; then
+                # Comment out the function
+                echo "# MIGRATED TO $target_file - [$current_date], CAN BE DELETED" >> "$temp_file"
+                echo "# $line" >> "$temp_file"
+                
+                local brace_count=0
+                if [[ "$line" =~ \{ ]]; then
+                    brace_count=1
+                fi
+                
+                ((i++))
+                
+                # Look for opening brace if not found
+                if [ $brace_count -eq 0 ] && [ $i -lt $line_count ]; then
+                    line="${lines[$i]}"
+                    echo "# $line" >> "$temp_file"
+                    if [[ "$line" =~ \{ ]]; then
+                        brace_count=1
+                    fi
+                    ((i++))
+                fi
+                
+                # Comment out function body
+                while [ $i -lt $line_count ] && [ $brace_count -gt 0 ]; do
+                    line="${lines[$i]}"
+                    echo "# $line" >> "$temp_file"
+                    
+                    # Count braces
+                    local open_braces=$(echo "$line" | grep -o '{' | wc -l | tr -d ' ')
+                    brace_count=$((brace_count + open_braces))
+                    local close_braces=$(echo "$line" | grep -o '}' | wc -l | tr -d ' ')
+                    brace_count=$((brace_count - close_braces))
+                    
+                    ((i++))
+                done
+                continue
+            fi
+        fi
+        
+        # Regular line, keep as-is
+        echo "$line" >> "$temp_file"
+        ((i++))
+    done
     
     # Replace the original file with the modified version
     mv "$temp_file" "$source_file"
