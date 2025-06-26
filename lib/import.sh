@@ -196,3 +196,101 @@ import_commands() {
         echo "No functions or aliases found to import."
     fi
 }
+
+# Private function - only used internally within command-import.sh
+_comment_out_migrated_items() {
+    local source_file="$1"
+    local target_file="$2"
+    local target_file_name=$(basename "$target_file")
+    local current_date=$(date '+%Y-%m-%d %H:%M:%S')
+    
+    # Read entire file into an array (compatible with older bash)
+    local lines=()
+    local line_count=0
+    while IFS= read -r line; do
+        lines[line_count]="$line"
+        ((line_count++))
+    done < "$source_file"
+    
+    # Create a temporary file for the modified zshrc
+    local temp_file=$(mktemp)
+    local i=0
+    
+    while [ $i -lt $line_count ]; do
+        local line="${lines[$i]}"
+        
+        # Skip our own command manager source lines (don't comment these out)
+        if [[ "$line" =~ "Source shell command manager files" ]] || [[ "$line" =~ "shell-commands" ]] || [[ "$line" =~ "test-commands" ]]; then
+            echo "$line" >> "$temp_file"
+            ((i++))
+            continue
+        fi
+        
+        # Check for alias definitions
+        if [[ "$line" =~ ^[[:space:]]*alias[[:space:]]+([a-zA-Z_][a-zA-Z0-9_]*)= ]]; then
+            alias_name="${BASH_REMATCH[1]}"
+            echo "# MIGRATED TO $target_file - [$current_date], CAN BE DELETED" >> "$temp_file"
+            echo "# $line" >> "$temp_file"
+            ((i++))
+            continue
+        fi
+        
+        # Check for function definitions
+        local func_name=""
+        if [[ "$line" =~ ^[[:space:]]*function[[:space:]]+([a-zA-Z_][a-zA-Z0-9_]*)[[:space:]]*\(\) ]] || [[ "$line" =~ ^[[:space:]]*([a-zA-Z_][a-zA-Z0-9_]*)[[:space:]]*\(\) ]]; then
+            # Extract function name
+            if [[ "$line" =~ ^[[:space:]]*function[[:space:]]+([a-zA-Z_][a-zA-Z0-9_]*) ]]; then
+                func_name="${BASH_REMATCH[1]}"
+            elif [[ "$line" =~ ^[[:space:]]*([a-zA-Z_][a-zA-Z0-9_]*)[[:space:]]*\(\) ]]; then
+                func_name="${BASH_REMATCH[1]}"
+            fi
+            
+            if [[ -n "$func_name" ]]; then
+                # Comment out the function
+                echo "# MIGRATED TO $target_file - [$current_date], CAN BE DELETED" >> "$temp_file"
+                echo "# $line" >> "$temp_file"
+                
+                local brace_count=0
+                if [[ "$line" =~ \{ ]]; then
+                    brace_count=1
+                fi
+                
+                ((i++))
+                
+                # Look for opening brace if not found
+                if [ $brace_count -eq 0 ] && [ $i -lt $line_count ]; then
+                    line="${lines[$i]}"
+                    echo "# $line" >> "$temp_file"
+                    if [[ "$line" =~ \{ ]]; then
+                        brace_count=1
+                    fi
+                    ((i++))
+                fi
+                
+                # Comment out function body
+                while [ $i -lt $line_count ] && [ $brace_count -gt 0 ]; do
+                    line="${lines[$i]}"
+                    echo "# $line" >> "$temp_file"
+                    
+                    # Count braces
+                    local open_braces=$(echo "$line" | grep -o '{' | wc -l | tr -d ' ')
+                    brace_count=$((brace_count + open_braces))
+                    local close_braces=$(echo "$line" | grep -o '}' | wc -l | tr -d ' ')
+                    brace_count=$((brace_count - close_braces))
+                    
+                    ((i++))
+                done
+                continue
+            fi
+        fi
+        
+        # Regular line, keep as-is
+        echo "$line" >> "$temp_file"
+        ((i++))
+    done
+    
+    # Replace the original file with the modified version
+    mv "$temp_file" "$source_file"
+    
+    echo "Commented out migrated items in $source_file with clear markers."
+}
