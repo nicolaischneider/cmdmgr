@@ -40,10 +40,9 @@ install() {
         echo "Installing in TEST mode - files will be created in project folder"
     else
         local marker_comment="Source shell command manager files"
-        echo "Installing in PRODUCTION mode - modifying actual .zshrc and installing cmdmgr globally"
-        
-        # Install cmdmgr globally in production mode
-        _install_global_cmdmgr
+        echo "Installing in PRODUCTION mode - modifying actual .zshrc and installing cmdmgr for current user"
+        # Install cmdmgr for current user only
+        _install_user_cmdmgr
     fi
     
     # Ensure directories exist and create all command files
@@ -65,17 +64,14 @@ install() {
     if ! [ -f "$target_file" ] || ! grep -q "$marker_comment" "$target_file"; then
         # Add a blank line for spacing
         echo "" >> "$target_file"
-        
         # Write each line from the source_lines array to the target file
         printf "%s\n" "${source_lines[@]}" >> "$target_file"
-        
         if [[ "$ENVIRONMENT_MODE" == "test" ]]; then
             echo "Added source lines to zshrc_test file in project folder."
         else
             echo "Added source lines to .zshrc."
-            
             # Show success tutorial in production mode only
-            _show_installation_tutorial
+            show_installation_tutorial
         fi
     else
         # The lines are already present, so don't add them again
@@ -88,42 +84,110 @@ install() {
 }
 
 # Private function - only used internally within install.sh
-_install_global_cmdmgr() {
+_install_user_cmdmgr() {
     local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    local install_dir="/usr/local/bin"
-    local cmdmgr_script="$install_dir/cmdmgr"
+    local user_bin_dir="$HOME/.local/bin"
+    local cmdmgr_script="$user_bin_dir/cmdmgr"
+    local current_user="$(whoami)"
     
-    # Check if we have write permissions to /usr/local/bin
-    if [ ! -w "$install_dir" ]; then
-        echo "Installing cmdmgr globally requires sudo permissions..."
-        sudo_required="true"
-    else
-        sudo_required="false"
-    fi
+    echo "Installing cmdmgr for user: $current_user"
     
-    # Create the cmdmgr wrapper script
+    # Create user bin directory if it doesn't exist
+    mkdir -p "$user_bin_dir"
+    
+    # Create the cmdmgr wrapper script with error handling
     local wrapper_content="#!/bin/bash
-# cmdmgr global wrapper script
-# This script calls the original cmdmgr.sh with all arguments
+# cmdmgr user-specific wrapper script
+# Installed by user: $current_user
+# Installation path: $script_dir/cmdmgr.sh
 
-exec \"$script_dir/cmdmgr.sh\" \"\$@\"
+CMDMGR_SCRIPT=\"$script_dir/cmdmgr.sh\"
+
+# Check if the script exists and is executable
+if [ ! -f \"\$CMDMGR_SCRIPT\" ]; then
+    echo \"Error: cmdmgr.sh not found at \$CMDMGR_SCRIPT\"
+    echo \"This usually means the cmdmgr installation was moved or deleted.\"
+    echo \"Please reinstall cmdmgr from the correct location.\"
+    exit 1
+fi
+
+if [ ! -x \"\$CMDMGR_SCRIPT\" ]; then
+    echo \"Error: \$CMDMGR_SCRIPT is not executable\"
+    echo \"Try running: chmod +x \$CMDMGR_SCRIPT\"
+    exit 1
+fi
+
+# Execute the original script with all arguments
+exec \"\$CMDMGR_SCRIPT\" \"\$@\"
 "
     
-    # Install the wrapper script
-    if [[ "$sudo_required" == "true" ]]; then
-        echo "$wrapper_content" | sudo tee "$cmdmgr_script" > /dev/null
-        sudo chmod +x "$cmdmgr_script"
+    # Write the wrapper script
+    echo "$wrapper_content" > "$cmdmgr_script"
+    chmod +x "$cmdmgr_script"
+    
+    # Check if ~/.local/bin is in PATH and add it if necessary
+    _setup_user_path "$user_bin_dir"
+    
+    # Verify installation
+    if [ -f "$cmdmgr_script" ] && [ -x "$cmdmgr_script" ]; then
+        echo "✓ cmdmgr installed in user directory: $cmdmgr_script"
+        echo "✓ Installation registered for user: $current_user"
+        
+        # Test the installation (only if PATH is set up correctly)
+        if [[ ":$PATH:" == *":$user_bin_dir:"* ]]; then
+            if command -v cmdmgr &>/dev/null; then
+                echo "✓ cmdmgr is available in your PATH"
+                echo "✓ You can now use 'cmdmgr <command>' from anywhere"
+            else
+                echo "⚠️  cmdmgr installed but not immediately available"
+                echo "   Restart your terminal or run: source ~/.zshrc"
+            fi
+        else
+            echo "⚠️  PATH will be updated after restarting your terminal"
+        fi
     else
-        echo "$wrapper_content" > "$cmdmgr_script"
-        chmod +x "$cmdmgr_script"
+        echo "✗ Failed to install cmdmgr for user"
+        return 1
+    fi
+}
+
+# Function to ensure ~/.local/bin is in PATH
+_setup_user_path() {
+    local user_bin_dir="$1"
+    local shell_config_file
+    
+    # Determine which shell config file to use
+    if [[ "$SHELL" == *"zsh"* ]]; then
+        shell_config_file="$HOME/.zshrc"
+    elif [[ "$SHELL" == *"bash"* ]]; then
+        shell_config_file="$HOME/.bashrc"
+    else
+        shell_config_file="$HOME/.profile"
     fi
     
-    if [ -f "$cmdmgr_script" ]; then
-        echo "✓ cmdmgr installed globally at: $cmdmgr_script"
-        echo "✓ You can now use 'cmdmgr <command>' from anywhere"
+    # Check if ~/.local/bin is already in PATH
+    if [[ ":$PATH:" != *":$user_bin_dir:"* ]]; then
+        echo "Adding $user_bin_dir to PATH in $shell_config_file"
+        
+        # Add PATH export to shell config file
+        local path_line="export PATH=\"\$HOME/.local/bin:\$PATH\""
+        local path_comment="# Add user-specific bin directory to PATH"
+        
+        # Check if the line already exists in the file
+        if ! grep -q "$path_line" "$shell_config_file" 2>/dev/null; then
+            echo "" >> "$shell_config_file"
+            echo "$path_comment" >> "$shell_config_file"
+            echo "$path_line" >> "$shell_config_file"
+            echo "✓ Added $user_bin_dir to PATH in $shell_config_file"
+        else
+            echo "✓ PATH already configured in $shell_config_file"
+        fi
+        
+        # Update PATH for current session
+        export PATH="$HOME/.local/bin:$PATH"
+        echo "✓ PATH updated for current session"
     else
-        echo "✗ Failed to install cmdmgr globally"
-        return 1
+        echo "✓ $user_bin_dir already in PATH"
     fi
 }
 
